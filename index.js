@@ -41,13 +41,14 @@ var Mapper = function(OBJY, options) {
             if(!app) url = this.currentUrl + '/client/' + this.currentWorkspace + '/' + urlPart;
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + urlPart;
 
-            //if(count) url += '/count'
+           // if(count) url += '/count'
             fetch(url, {
                 method: method,
                 body: body,
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Baerer '+sessionStorage.getItem('accessToken') }
               }).then(res => res.json())
               .then(json => {
+                console.log(url, json)
                 success(json)
               });
         },
@@ -91,7 +92,6 @@ var Mapper = function(OBJY, options) {
 
         },
 
-
         listClients: function(success, error) {
 
         },
@@ -101,11 +101,11 @@ var Mapper = function(OBJY, options) {
         },
 
         getByCriteria: function(criteria, success, error, app, client, flags) {
-            this._genericApiCall(this.objectFamily + '/?' + objToQueryString(criteria), 'GET', {}, success, error, app)
+            this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria), 'GET', {}, success, error, app)
         },
 
         count: function(criteria, success, error, app, client, flags) {
-            //...
+            this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria), 'GET', {}, success, error, app, true)
         },
 
         update: function(spooElement, success, error, app, client) {
