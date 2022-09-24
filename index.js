@@ -1,26 +1,85 @@
 var _nodejs = (typeof process !== 'undefined' && process.versions && process.versions.node);
-if (_nodejs) var SPOO = require('spooclient').SpooClient; 
-else SPOO = SPOO_Client;
+if (_nodejs) var fetch = require('node-fetch'); 
+
+if (typeof localStorage === "undefined" || localStorage === null) {
+  var LocalStorage = require('node-localstorage').LocalStorage;
+  localStorage = new LocalStorage('./scratch');
+}
+
+if (typeof sessionStorage === "undefined" || sessionStorage === null) {
+    sessionStorage = require('sessionstorage');
+}
+
+function objToQueryString(obj) {
+    const parts = [];
+    let _i;
+
+    obj = JSON.parse(JSON.stringify(obj));
+    for (const i in obj) {
+        if (obj.hasOwnProperty(i)) {
+            if (typeof obj[i] == 'object') obj[i] = JSON.stringify(obj[i]);
+            if (i.indexOf('properties') != -1 && i.indexOf('.value') == -1) _i = i + '.value';
+            else _i = i;
+
+            parts.push(encodeURIComponent(_i) + '=' + encodeURIComponent(obj[i]));
+        }
+    }
+    return parts.join('&');
+}
 
 var Mapper = function(OBJY, options) {
+
     return Object.assign(new OBJY.StorageTemplate(OBJY, options), {
 
         spoo: null,
         currentWorkspace: null,
+        currentUrl:null,
+
+        _genericApiCall: function(urlPart, method, body, success, error, app, count){
+            
+            var url;
+            if(!app) url = this.currentUrl + '/client/' + this.currentWorkspace + '/' + urlPart;
+            else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + urlPart;
+
+            //if(count) url += '/count'
+            fetch(url, {
+                method: method,
+                body: body,
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Baerer '+sessionStorage.getItem('accessToken') }
+              }).then(res => res.json())
+              .then(json => {
+                success(json)
+              });
+        },
 
         connect: function(credentials, success, error, options) {
-            this.currentWorkspace = credentials.workspace;
+            this.currentWorkspace = credentials.client;
+            this.currentUrl = credentials.url;
 
-            this.spoo = new SPOO(credentials.workspace)
+            fetch(credentials.url + '/client/' + credentials.client + '/auth', {
+                method: 'POST',
+                body: JSON.stringify({
+                    permanent: true,
+                    username: credentials.username,
+                    password: credentials.password
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+              }).then(res => res.json())
+              .then(json => {
+                localStorage.setItem('clientId', credentials.client);
+                sessionStorage.setItem('accessToken', json.token.accessToken);
+                localStorage.setItem('refreshToken', json.token.refreshToken)
+                success(json)
+              });
+
             return this;
         },
 
         getConnection: function() {
-            return this.spoo;
+            return this;
         },
 
         useConnection: function(spoo, success, error) {
-            this.spoo = spoo;
             return this;
         },
 
@@ -38,66 +97,28 @@ var Mapper = function(OBJY, options) {
         },
 
         getById: function(id, success, error, app, client) {
-            var spoo = new SPOO(client);
-            if(app) spoo.AppId(app);
-
-            spoo.io()[this.objectFamily](id).get((data, err) => {
-                if(err) return error(err)
-                success(data)
-            })
+            this._genericApiCall(this.objectFamily + '/' + id, 'GET', {}, success, error, app)
         },
 
         getByCriteria: function(criteria, success, error, app, client, flags) {
-            var spoo = new SPOO(client);
-            if(app) spoo.AppId(app);
-
-            // TODO: plural name!
-            spoo.io()[this.objectFamily](criteria).get((data, err) => {
-                if(err) return error(err)
-                success(data)
-            })
+            this._genericApiCall(this.objectFamily + '/?' + objToQueryString(criteria), 'GET', {}, success, error, app)
         },
 
         count: function(criteria, success, error, app, client, flags) {
-            var spoo = new SPOO(client);
-            if(app) spoo.AppId(app);
-
-            // TODO: plural name!
-            spoo.io()[this.objectFamily](criteria).count((data, err) => {
-                if(err) return error(err)
-                success(data)
-            }) 
+            //...
         },
 
         update: function(spooElement, success, error, app, client) {
-            var spoo = new SPOO(client);
-            if(app) spoo.AppId(app);
-
-            spoo.io()[this.objectFamily](spooElement._id).update(spooElement, (data, err) => {
-                if(err) return error(err)
-                success(data)
-            })
+            // chain ???
+            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'PUT', spooElement, success, error, app)
         },
 
         add: function(spooElement, success, error, app, client) {
-            var spoo = new SPOO(client);
-            if(app) spoo.AppId(app);
-
-            spoo.io()[this.objectFamily](spooElement).add((data, err) => {
-                if(err) return error(err)
-                success(data)
-            })  
+            this._genericApiCall(spooElement.role, 'POST', JSON.stringify(spooElement), success, error, app)
         },
 
         remove: function(spooElement, success, error, app, client) {
-            var spoo = new SPOO(client);
-            if(app) spoo.AppId(app);
-
-            spoo.io()[this.objectFamily](spooElement._id).delete((data, err) => {
-                if(err) return error(err)
-                success(data)
-            })
-           
+            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'DELETE', {}, success, error, app)
         }
     })
 }

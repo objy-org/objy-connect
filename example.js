@@ -3,4 +3,18 @@ var OBJY = require('objy');
 
 var m = new Mapper(OBJY);
 
-m.connect({workspace: "spoo"})
+
+OBJY.define({
+	name: "object",
+	pluralName: "objects",
+	storage: m
+})
+
+m.connect({client: "spoo", url: "https://my.piles.cards/api", username: "admin", password: "__..--12345"}, () => {
+	console.log('connected');
+	OBJY.object({name:"22"}).add(() => {
+
+	})
+})
+
+
