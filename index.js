@@ -35,6 +35,10 @@ var Mapper = function(OBJY, options) {
         currentWorkspace: null,
         currentUrl:null,
 
+        _relogin: function(urlPart, method, body, success, error, app, count){
+            //@TODO
+        },
+
         _genericApiCall: function(urlPart, method, body, success, error, app, count){
             
             var url;
@@ -42,11 +46,18 @@ var Mapper = function(OBJY, options) {
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + urlPart;
 
            // if(count) url += '/count'
+           console.log(url, body)
             fetch(url, {
                 method: method,
                 body: body,
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Baerer '+sessionStorage.getItem('accessToken') }
-              }).then(res => res.json())
+              }).then(res => {
+                //if (res.status == 400) res.errStatus = 400;
+                if (res.status == 401) {
+                    if(localStorage.getItem('refreshToken')) self._relogin(urlPart, method, body, success, error, app, count);
+                }
+                return res.json()
+                })
               .then(json => {
                 console.log(url, json)
                 success(json)
@@ -76,24 +87,8 @@ var Mapper = function(OBJY, options) {
             return this;
         },
 
-        getConnection: function() {
-            return this;
-        },
-
-        useConnection: function(spoo, success, error) {
-            return this;
-        },
-
-        getDBByMultitenancy: function(client) {
-
-        },
-
         createClient: function(client, success, error) {
-
-        },
-
-        listClients: function(success, error) {
-
+            //@TODO
         },
 
         getById: function(id, success, error, app, client) {
@@ -109,8 +104,13 @@ var Mapper = function(OBJY, options) {
         },
 
         update: function(spooElement, success, error, app, client) {
-            // chain ???
-            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'PUT', spooElement, success, error, app)
+            var alterData = [];
+            OBJY.alterSequence.forEach(a => {
+                if(a[Object.keys(a)[0]].length > 1) a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]])
+                else a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]])[0]
+                alterData.push(a)
+            })
+            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'PATCH', JSON.stringify(alterData), success, error, app)
         },
 
         add: function(spooElement, success, error, app, client) {
