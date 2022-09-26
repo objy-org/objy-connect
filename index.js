@@ -36,7 +36,17 @@ var Mapper = function(OBJY, options) {
         currentUrl:null,
 
         _relogin: function(urlPart, method, body, success, error, app, count){
-            //@TODO
+            fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
+                method: method,
+                body: JSON.stringify({
+                    refreshToken: localStorage.getItem('refreshToken')
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json'}
+              }).then(res => {})
+              .then(json => {
+                console.log('refresh', json)
+                this._genericApiCall(urlPart, method, body, success, error, app, count);
+              });
         },
 
         _genericApiCall: function(urlPart, method, body, success, error, app, count){
@@ -54,7 +64,7 @@ var Mapper = function(OBJY, options) {
               }).then(res => {
                 //if (res.status == 400) res.errStatus = 400;
                 if (res.status == 401) {
-                    if(localStorage.getItem('refreshToken')) self._relogin(urlPart, method, body, success, error, app, count);
+                    if(localStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
                 }
                 return res.json()
                 })
