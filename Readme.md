@@ -13,8 +13,26 @@ You need OBJY and this mapper.
 ## Browser
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/objy/dist/browser.js">
-<script src="https://cdn.jsdelivr.net/npm/spoo-client-js/index.js">
+<script src="https://cdn.jsdelivr.net/npm/objy/dist/browser.js" />
+<script src="https://cdn.jsdelivr.net/npm/spoo-client-js/index.js" />
+<script>
+let spoo = new SPOO(OBJY)
+
+OBJY.define({
+	name: "object",
+	pluralName: "objects",
+	storage: spoo
+})
+
+// Login
+spoo.connect({client: "myclient", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
+	OBJY.objects({}).get(data => {
+		console.log('data:', data)
+	}, err => {
+		console.log('err:', err)
+	})
+})
+</script>
 ```
 
 ## Node

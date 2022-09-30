@@ -134,4 +134,4 @@ var Mapper = function(OBJY, options) {
 }
 
 if(_nodejs) module.exports = Mapper; 
-else var SPOOMapper = Mapper;
+else var SPOO = Mapper;
