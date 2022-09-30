@@ -14,14 +14,18 @@ You need OBJY and this mapper.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/objy/dist/browser.js">
-<script src="https://cdn.jsdelivr.net/npm/objy-mapper-spoo/index.js">
+<script src="https://cdn.jsdelivr.net/npm/spoo-client-js/index.js">
 ```
 
 ## Node
 
+```shell
+npm i objy spoo-client-js --save
+```
+
 ```javascript
 let OBJY = require('objy');
-let SPOO = require('objy-mapper-spoo');
+let SPOO = require('spoo-client-js');
 
 let spoo = new SPOO(OBJY)
 
@@ -32,7 +36,7 @@ OBJY.define({
 })
 
 // Login
-spoo.connect({client: "spoo", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
+spoo.connect({client: "myclient", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
 	OBJY.objects({}).get(data => {
 		console.log('data:', data)
 	}, err => {
