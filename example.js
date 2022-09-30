@@ -15,7 +15,7 @@ spoo.connect({client: "spoo", url: "https://my.piles.cards/api", username: "admi
 
 	})*/
 
-	OBJY.object("62a070638fb0b441b460180c").get(data => {
+	OBJY.objects({}).get(data => {
 		console.log('data:', data)
 
 		data.setName('Thieme2').update();
