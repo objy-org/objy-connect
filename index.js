@@ -56,7 +56,6 @@ var Mapper = function(OBJY, options) {
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + urlPart;
 
            // if(count) url += '/count'
-           console.log(url, body)
             fetch(url, {
                 method: method,
                 body: body,
@@ -102,15 +101,15 @@ var Mapper = function(OBJY, options) {
         },
 
         getById: function(id, success, error, app, client) {
-            this._genericApiCall(this.objectFamily + '/' + id, 'GET', {}, success, error, app)
+            this._genericApiCall(this.objectFamily + '/' + id, 'GET', undefined, success, error, app)
         },
 
         getByCriteria: function(criteria, success, error, app, client, flags) {
-            this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria), 'GET', {}, success, error, app)
+            this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria), 'GET', undefined, success, error, app)
         },
 
         count: function(criteria, success, error, app, client, flags) {
-            this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria), 'GET', {}, success, error, app, true)
+            this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria), 'GET', undefined, success, error, app, true)
         },
 
         update: function(spooElement, success, error, app, client) {
@@ -128,7 +127,7 @@ var Mapper = function(OBJY, options) {
         },
 
         remove: function(spooElement, success, error, app, client) {
-            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'DELETE', {}, success, error, app)
+            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'DELETE', undefined, success, error, app)
         }
     })
 }
