@@ -14,18 +14,18 @@ You need OBJY and this mapper.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/objy/dist/browser.js" />
-<script src="https://cdn.jsdelivr.net/npm/objy-connect-client/index.js" />
+<script src="https://cdn.jsdelivr.net/npm/objy-connect-mapper/index.js" />
 <script>
-let OBJY_CONNECT = new CONNECT(OBJY)
+let remote = new CONNECT(OBJY)
 
 OBJY.define({
 	name: "object",
 	pluralName: "objects",
-	storage: OBJY_CONNECT
+	storage: remote
 })
 
 // Login
-OBJY_CONNECT.connect({client: "myclient", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
+remote.connect({client: "myclient", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
 	OBJY.objects({}).get(data => {
 		console.log('data:', data)
 	}, err => {
@@ -43,18 +43,18 @@ npm i objy spoo-client-js --save
 
 ```javascript
 let OBJY = require('objy');
-let SPOO = require('spoo-client-js');
+let CONNECT = require('objy-connect-mapper');
 
-let spoo = new SPOO(OBJY)
+let remote = new CONNECT(OBJY)
 
 OBJY.define({
 	name: "object",
 	pluralName: "objects",
-	storage: spoo
+	storage: remote
 })
 
 // Login
-spoo.connect({client: "myclient", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
+remote.connect({client: "myclient", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
 	OBJY.objects({}).get(data => {
 		console.log('data:', data)
 	}, err => {

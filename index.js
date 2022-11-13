@@ -133,4 +133,4 @@ var Mapper = function(OBJY, options) {
 }
 
 if(_nodejs) module.exports = Mapper; 
-else var SPOO = Mapper;
+else var CONNECT = Mapper;
