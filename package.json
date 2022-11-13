@@ -1,6 +1,6 @@
 {
-  "name": "spoo-client-js",
-  "version": "0.0.14",
+  "name": "objy-connect-mapper",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
