@@ -1,6 +1,6 @@
 # OBJY Connect Client
 
-The mapper can be used as OBJY storage for interacting with any OBJY Connect platform. Just define your object wrappers and use the spoo mapper for storage.
+The mapper can be used as OBJY storage for interacting with any OBJY Connect platform. Just define your object wrappers and use the connect mapper for storage.
 
 # Documentation
 
@@ -14,7 +14,7 @@ You need OBJY and this mapper.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/objy/dist/browser.js" />
-<script src="https://cdn.jsdelivr.net/npm/objy-connect-mapper/index.js" />
+<script src="https://cdn.jsdelivr.net/npm/objy-connect/index.js" />
 <script>
 let remote = new CONNECT(OBJY)
 
@@ -38,12 +38,12 @@ remote.connect({client: "myclient", url: "https://mydomain.com/api", username: "
 ## Node
 
 ```shell
-npm i objy spoo-client-js --save
+npm i objy objy-connect --save
 ```
 
 ```javascript
 let OBJY = require('objy');
-let CONNECT = require('objy-connect-mapper');
+let CONNECT = require('objy-connect');
 
 let remote = new CONNECT(OBJY)
 

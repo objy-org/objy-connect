@@ -1,7 +1,7 @@
-var SPOO = require('./index.js');
+var CONNECT = require('./index.js');
 var OBJY = require('objy');
 
-var spoo = new SPOO(OBJY)
+var spoo = new CONNECT(OBJY)
 
 OBJY.define({
 	name: "object",
