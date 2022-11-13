@@ -33,7 +33,7 @@ var Mapper = function(OBJY, options) {
 
         spoo: null,
         currentWorkspace: null,
-        currentUrl:null,
+        currentUrl:null, 
 
         _relogin: function(urlPart, method, body, success, error, app, count){
             fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
