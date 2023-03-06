@@ -1,5 +1,5 @@
 var _nodejs = (typeof process !== 'undefined' && process.versions && process.versions.node);
-if (_nodejs) var fetch = require('node-fetch'); 
+//if (_nodejs) var fetch = require('node-fetch'); 
 
 if (typeof localStorage === "undefined" || localStorage === null) {
   var LocalStorage = require('node-localstorage').LocalStorage;
@@ -37,15 +37,25 @@ var Mapper = function(OBJY, options) {
 
         _relogin: function(urlPart, method, body, success, error, app, count){
             fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
-                method: method,
+                method: 'POST',
                 body: JSON.stringify({
                     refreshToken: localStorage.getItem('refreshToken')
                 }),
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json'}
-              }).then(res => {})
+              }).then(res => {
+                if(res.status == 401) {
+                    error({error: 'refreshing token failed'})
+                    return Promise.reject();
+                }
+                return res.json()
+              })
               .then(json => {
-                console.log('refresh', json)
+                console.log('json', json);
+                sessionStorage.setItem('accessToken', json.token.accessToken);
+                localStorage.setItem('refreshToken', json.token.refreshToken);
                 this._genericApiCall(urlPart, method, body, success, error, app, count);
+              }).catch(err = {
+                
               });
         },
 
@@ -64,20 +74,25 @@ var Mapper = function(OBJY, options) {
                 //if (res.status == 400) res.errStatus = 400;
                 if (res.status == 401) {
                     if(localStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
+                    return Promise.reject();
                 }
                 return res.json()
                 })
               .then(json => {
-                console.log(url, json)
                 success(json)
+              }).catch(err = {
+
               });
         },
 
         connect: function(credentials, success, error, options) {
             this.currentWorkspace = credentials.client;
             this.currentUrl = credentials.url;
+            return this;
+        },
 
-            fetch(credentials.url + '/client/' + credentials.client + '/auth', {
+        login: function(credentials, success, error){
+             fetch(credentials.url + '/client/' + credentials.client + '/auth', {
                 method: 'POST',
                 body: JSON.stringify({
                     permanent: true,
@@ -92,8 +107,7 @@ var Mapper = function(OBJY, options) {
                 localStorage.setItem('refreshToken', json.token.refreshToken)
                 success(json)
               });
-
-            return this;
+              return this;
         },
 
         createClient: function(client, success, error) {
@@ -133,4 +147,6 @@ var Mapper = function(OBJY, options) {
 }
 
 if(_nodejs) module.exports = Mapper; 
-else var CONNECT = Mapper;
+else {
+    window.CONNECT = Mapper;
+}

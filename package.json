@@ -1,6 +1,6 @@
 {
   "name": "objy-connect",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,8 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "node-localstorage": "^2.2.1",
-    "objy": "^0.6.984",
-    "sessionstorage": "^0.1.0",
-    "spooclient": "0.0.14"
+    "sessionstorage": "^0.1.0"
+  },
+  "devDependencies": {
+    "objy": "^0.6.984"
   }
 }
