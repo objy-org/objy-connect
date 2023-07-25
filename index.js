@@ -1,5 +1,5 @@
 var _nodejs = (typeof process !== 'undefined' && process.versions && process.versions.node);
-//if (_nodejs) var fetch = require('node-fetch'); 
+if (_nodejs) var fetch = require('node-fetch'); 
 
 if (typeof localStorage === "undefined" || localStorage === null) {
   var LocalStorage = require('node-localstorage').LocalStorage;
@@ -27,7 +27,7 @@ function objToQueryString(obj) {
     return parts.join('&');
 }
 
-var Mapper = function(OBJY, options) {
+var ConnectMapper = function(OBJY, options) {
 
     return Object.assign(new OBJY.StorageTemplate(OBJY, options), {
 
@@ -54,8 +54,8 @@ var Mapper = function(OBJY, options) {
                 sessionStorage.setItem('accessToken', json.token.accessToken);
                 localStorage.setItem('refreshToken', json.token.refreshToken);
                 this._genericApiCall(urlPart, method, body, success, error, app, count);
-              }).catch(err = {
-                
+              }).catch(err => {
+
               });
         },
 
@@ -80,7 +80,7 @@ var Mapper = function(OBJY, options) {
                 })
               .then(json => {
                 success(json)
-              }).catch(err = {
+              }).catch(err => {
 
               });
         },
@@ -146,7 +146,10 @@ var Mapper = function(OBJY, options) {
     })
 }
 
-if(_nodejs) module.exports = Mapper; 
-else {
-    window.CONNECT = Mapper;
+
+if(_nodejs) module.exports = ConnectMapper; 
+else if(typeof window !== 'undefined') {
+    window.CONNECT = ConnectMapper;
 }
+
+if(0)typeof await/2//2; export default ConnectMapper
