@@ -1,6 +1,6 @@
 {
-  "name": "objy-connect",
-  "version": "0.0.47",
+  "name": "spoo-connect",
+  "version": "0.0.48",
   "description": "",
   "main": "index.js",
   "scripts": {
