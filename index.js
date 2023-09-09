@@ -45,7 +45,6 @@ var ConnectMapper = function(OBJY, options) {
               }).then(res => {
                 if(res.status == 401) {
                     error({error: 'refreshing token failed'})
-                    return Promise.reject();
                 }
                 return res.json()
               })
@@ -74,7 +73,7 @@ var ConnectMapper = function(OBJY, options) {
                 //if (res.status == 400) res.errStatus = 400;
                 if (res.status == 401) {
                     if(localStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
-                    return Promise.reject();
+                   
                 }
                 return res.json()
                 })
@@ -91,8 +90,11 @@ var ConnectMapper = function(OBJY, options) {
             return this;
         },
 
+        // SPECIAL OBJY PLATFORM OPERATIONS
+
         login: function(credentials, success, error){
-             fetch(credentials.url + '/client/' + credentials.client + '/auth', {
+            return new Promise((resolve, reject) => {
+                fetch(credentials.url + '/client/' + credentials.client + '/auth', {
                 method: 'POST',
                 body: JSON.stringify({
                     permanent: true,
@@ -105,13 +107,149 @@ var ConnectMapper = function(OBJY, options) {
                 localStorage.setItem('clientId', credentials.client);
                 sessionStorage.setItem('accessToken', json.token.accessToken);
                 localStorage.setItem('refreshToken', json.token.refreshToken)
-                success(json)
+                if(success) success(json)
+                else resolve(json)
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
               });
-              return this;
+            }) 
         },
 
-        createClient: function(client, success, error) {
-            //@TODO
+        authenticated: function(callback){
+            return new Promise((resolve, reject) => {
+            fetch(credentials.url + '/client/' + credentials.client + '/authenticated?token='+sessionStorage.getItem('accessToken'), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+              }).then(res => res.json())
+              .then(json => {
+                if(callback) callback(json.authenticated)
+                else resolve(json.authenticated)
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
+              });
+            });
+        },
+
+        logout: function(success, error){
+            return new Promise((resolve, reject) => {
+            fetch(credentials.url + '/client/' + credentials.client + '/token/reject', {
+                method: 'POST',
+                body: JSON.stringify({
+                    sessionStorage.getItem('accessToken'),
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Baerer '+sessionStorage.getItem('accessToken') }
+              }).then(res => res.json())
+              .then(json => {
+                sessionStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken')
+                if(success) success(json)
+                else resolve(json)
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
+              });
+              });
+        },
+
+        requestUserKey: function(data, success, error){
+            return new Promise((resolve, reject) => {
+            fetch(credentials.url + '/client/' + credentials.client + '/user/requestkey', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: data.email
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+              }).then(res => res.json())
+              .then(json => {
+                if(success) success(json)
+                else resolve(json)
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
+              });
+              });
+        },
+
+        requestPasswordReset: function(data, success, error){
+            return new Promise((resolve, reject) => {
+            fetch(credentials.url + '/client/' + credentials.client + '/user/requestpasswordreset', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: data.email,
+                    username: data.username
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+              }).then(res => res.json())
+              .then(json => {
+                if(success) success(json)
+                else resolve(json)
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
+              });
+              });
+        },
+
+        resetPassword: function(data, success, error){
+            return new Promise((resolve, reject) => {
+            fetch(credentials.url + '/client/' + credentials.client + '/user/resetpassword', {
+                method: 'POST',
+                body: JSON.stringify({
+                    resetKey: data.resetKey,
+                    password: data.password,
+                    password2: data.password2
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+              }).then(res => res.json())
+              .then(json => {
+                if(success) success(json)
+                else resolve(json)                    
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
+              });
+              });
+        },
+
+        requestClientKey: function(email, success, error){
+            return new Promise((resolve, reject) => {
+            fetch(credentials.url + '/client/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: data.email
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+              }).then(res => res.json())
+              .then(json => {
+                if(success) success(json)
+                else resolve(json)
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
+              });
+              });
+        },
+
+        createClient: function(data, success, error) {
+            return new Promise((resolve, reject) => {
+            fetch(credentials.url + '/client', {
+                method: 'POST',
+                body: JSON.stringify({
+                    registrationKey: data.registrationKey
+                    clientname: data.clientname
+                }),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+              }).then(res => res.json())
+              .then(json => {
+                if(success) success(json)
+                else resolve(json)
+              }).catch(err => {
+                if(error) error(err)
+                else reject(err)
+              });
+              });
         },
 
         getById: function(id, success, error, app, client) {
