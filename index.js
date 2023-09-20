@@ -137,7 +137,7 @@ var ConnectMapper = function(OBJY, options) {
             fetch(credentials.url + '/client/' + credentials.client + '/token/reject', {
                 method: 'POST',
                 body: JSON.stringify({
-                    sessionStorage.getItem('accessToken'),
+                    accessToken: sessionStorage.getItem('accessToken'),
                 }),
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Baerer '+sessionStorage.getItem('accessToken') }
               }).then(res => res.json())
@@ -237,7 +237,7 @@ var ConnectMapper = function(OBJY, options) {
             fetch(credentials.url + '/client', {
                 method: 'POST',
                 body: JSON.stringify({
-                    registrationKey: data.registrationKey
+                    registrationKey: data.registrationKey,
                     clientname: data.clientname
                 }),
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
