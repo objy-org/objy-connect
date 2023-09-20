@@ -6,35 +6,13 @@ The mapper can be used as OBJY storage for interacting with any SPOO-based platf
 
 Find the full documentation at [objy.xyz](https://objy.xyz).
 
-# Usage
-
-You need OBJY and this mapper.
+# Install
 
 ## Browser
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/objy/dist/browser.js" />
 <script src="https://cdn.jsdelivr.net/npm/objy-connect/index.js" />
-<script>
-let remote = new CONNECT(OBJY);
-remote.connect({client: "myclient", url: "https://mydomain.com/api"})
-
-OBJY.define({
-	name: "object",
-	pluralName: "objects",
-	storage: remote,
-	templateFamily: null // important
-})
-
-// Login
-remote.login({username: "user", password: "***"}, () => {
-	OBJY.objects({}).get(data => {
-		console.log('data:', data)
-	}, err => {
-		console.log('err:', err)
-	})
-})
-</script>
 ```
 
 ## Node
@@ -43,22 +21,34 @@ remote.login({username: "user", password: "***"}, () => {
 npm i objy objy-connect --save
 ```
 
-```javascript
-let OBJY = require('objy');
-let CONNECT = require('objy-connect');
+# Usage
 
+With ES6:
+```javascript
+import CONNECT from "objy-connect";
+```
+
+With CommonJS:
+```javascript
+var CONNECT = require('objy-connect')
+```
+
+With `<script src="...">`, the `CONNECT` object will be available automatically.
+
+
+```javascript
 let remote = new CONNECT(OBJY);
-remote.connect({client: "myclient", url: "https://mydomain.com/api"});
+remote.connect({client: "myclient", url: "https://mydomain.com/api"})
 
 OBJY.define({
 	name: "object",
 	pluralName: "objects",
-	storage: remote,
+	storage: new CONNECT(OBJY).connect({client: "myclient", url: "https://mydomain.com/api"}),
 	templateFamily: null // important
-})
+});
 
 // Login
-remote.login({client: "myclient", url: "https://mydomain.com/api", username: "user", password: "***"}, () => {
+remote.login({username: "user", password: "***"}, () => {
 	OBJY.objects({}).get(data => {
 		console.log('data:', data)
 	}, err => {
