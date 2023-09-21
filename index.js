@@ -1,5 +1,6 @@
+var fetch = () => fetch;
 var _nodejs = (typeof process !== 'undefined' && process.versions && process.versions.node);
-if (_nodejs) var fetch = require('node-fetch'); 
+if (_nodejs) fetch = require('node-fetch'); 
 
 if (typeof localStorage === "undefined" || localStorage === null) {
   var LocalStorage = require('node-localstorage').LocalStorage;
