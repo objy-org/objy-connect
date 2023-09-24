@@ -1,5 +1,8 @@
+var _fetch = null;
 var _nodejs = (typeof process !== 'undefined' && process.versions && process.versions.node);
-if (_nodejs) var fetch = require('node-fetch'); 
+
+if (_nodejs) _fetch = require('node-fetch'); 
+else _fetch = fetch
 
 if (typeof localStorage === "undefined" || localStorage === null) {
   var LocalStorage = require('node-localstorage').LocalStorage;
@@ -36,7 +39,7 @@ var ConnectMapper = function(OBJY, options) {
         currentUrl:null, 
 
         _relogin: function(urlPart, method, body, success, error, app, count){
-            fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
+            _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
                 method: 'POST',
                 body: JSON.stringify({
                     refreshToken: localStorage.getItem('refreshToken')
@@ -65,7 +68,7 @@ var ConnectMapper = function(OBJY, options) {
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + urlPart;
 
            // if(count) url += '/count'
-            fetch(url, {
+            _fetch(url, {
                 method: method,
                 body: body,
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Baerer '+sessionStorage.getItem('accessToken') }
@@ -94,7 +97,7 @@ var ConnectMapper = function(OBJY, options) {
 
         login: function(credentials, success, error){
             return new Promise((resolve, reject) => {
-                fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/auth', {
+                _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/auth', {
                 method: 'POST',
                 body: JSON.stringify({
                     permanent: credentials.permanent,
@@ -118,7 +121,7 @@ var ConnectMapper = function(OBJY, options) {
 
         authenticated: function(callback){
             return new Promise((resolve, reject) => {
-            fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/authenticated?token='+sessionStorage.getItem('accessToken'), {
+            _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/authenticated?token='+sessionStorage.getItem('accessToken'), {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' }
               }).then(res => res.json())
@@ -134,7 +137,7 @@ var ConnectMapper = function(OBJY, options) {
 
         logout: function(success, error){
             return new Promise((resolve, reject) => {
-            fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token/reject', {
+            _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token/reject', {
                 method: 'POST',
                 body: JSON.stringify({
                     accessToken: sessionStorage.getItem('accessToken'),
@@ -155,7 +158,7 @@ var ConnectMapper = function(OBJY, options) {
 
         requestUserKey: function(data, success, error){
             return new Promise((resolve, reject) => {
-            fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/user/requestkey', {
+            _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/user/requestkey', {
                 method: 'POST',
                 body: JSON.stringify({
                     email: data.email
@@ -174,7 +177,7 @@ var ConnectMapper = function(OBJY, options) {
 
         requestPasswordReset: function(data, success, error){
             return new Promise((resolve, reject) => {
-            fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/user/requestpasswordreset', {
+            _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/user/requestpasswordreset', {
                 method: 'POST',
                 body: JSON.stringify({
                     email: data.email,
@@ -194,7 +197,7 @@ var ConnectMapper = function(OBJY, options) {
 
         resetPassword: function(data, success, error){
             return new Promise((resolve, reject) => {
-            fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/user/resetpassword', {
+            _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/user/resetpassword', {
                 method: 'POST',
                 body: JSON.stringify({
                     resetKey: data.resetKey,
@@ -215,7 +218,7 @@ var ConnectMapper = function(OBJY, options) {
 
         requestClientKey: function(email, success, error){
             return new Promise((resolve, reject) => {
-            fetch(this.currentUrl + '/client/register', {
+            _fetch(this.currentUrl + '/client/register', {
                 method: 'POST',
                 body: JSON.stringify({
                     email: data.email
@@ -234,7 +237,7 @@ var ConnectMapper = function(OBJY, options) {
 
         createClient: function(data, success, error) {
             return new Promise((resolve, reject) => {
-            fetch(this.currentUrl + '/client', {
+            _fetch(this.currentUrl + '/client', {
                 method: 'POST',
                 body: JSON.stringify({
                     registrationKey: data.registrationKey,
