@@ -13,11 +13,11 @@ if (typeof sessionStorage === "undefined" || sessionStorage === null) {
     sessionStorage = require('sessionstorage');
 }
 
-function objToQueryString(obj) {
+function objToQueryString(obj, flags) {
     const parts = [];
     let _i;
 
-    obj = JSON.parse(JSON.stringify(obj));
+    obj = JSON.parse(JSON.stringify(Object.assign(obj, falgs)));
     for (const i in obj) {
         if (obj.hasOwnProperty(i)) {
             if (typeof obj[i] == 'object') obj[i] = JSON.stringify(obj[i]);
@@ -260,11 +260,11 @@ var ConnectMapper = function(OBJY, options) {
         },
 
         getByCriteria: function(criteria, success, error, app, client, flags) {
-            this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria), 'GET', undefined, success, error, app)
+            this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app)
         },
 
         count: function(criteria, success, error, app, client, flags) {
-            this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria), 'GET', undefined, success, error, app, true)
+            this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app, true)
         },
 
         update: function(spooElement, success, error, app, client) {
