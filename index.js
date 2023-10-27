@@ -9,6 +9,8 @@ if (typeof localStorage === 'undefined' || localStorage === null) {
     localStorage = new LocalStorage('./scratch');
 }
 
+
+
 if (typeof sessionStorage === 'undefined' || sessionStorage === null) {
     sessionStorage = require('sessionstorage');
 }
@@ -290,15 +292,15 @@ var ConnectMapper = function (OBJY, options) {
                 else a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]])[0];
                 alterData.push(a);
             });
-            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'PATCH', JSON.stringify(alterData), success, error, app);
+            this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'PATCH', JSON.stringify(alterData), success, error, app);
         },
 
         add: function (spooElement, success, error, app, client) {
-            this._genericApiCall(spooElement.role, 'POST', JSON.stringify(spooElement), success, error, app);
+            this._genericApiCall(this.objectFamily, 'POST', JSON.stringify(spooElement), success, error, app);
         },
 
         remove: function (spooElement, success, error, app, client) {
-            this._genericApiCall(spooElement.role + '/' + spooElement._id, 'DELETE', undefined, success, error, app);
+            this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'DELETE', undefined, success, error, app);
         },
     });
 };
