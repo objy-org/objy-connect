@@ -118,6 +118,30 @@ var ConnectMapper = function (OBJY, options) {
             });
         },
 
+        relogin: function (success, error) {
+            return new Promise((resolve, reject) => {
+                _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        refreshToken: mainStorage.getItem('refreshToken')
+                    }),
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                })
+                    .then((res) => res.json())
+                    .then((json) => {
+                        localStorage.setItem('clientId', this.currentWorkspace);
+                        sessionStorage.setItem('accessToken', json.token.accessToken);
+                        mainStorage.setItem('refreshToken', json.token.refreshToken);
+                        if (success) success(json);
+                        else resolve(json);
+                    })
+                    .catch((err) => {
+                        if (error) error(err);
+                        else reject(err);
+                    });
+            });
+        },
+
         authenticated: function (callback) {
             return new Promise((resolve, reject) => {
                 _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/authenticated?token=' + sessionStorage.getItem('accessToken'), {
