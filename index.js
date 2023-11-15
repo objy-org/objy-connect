@@ -1,15 +1,14 @@
 var _fetch = null;
 var _nodejs = typeof process !== 'undefined' && process.versions && process.versions.node;
+var mainStorage = null;
 
 if (_nodejs) _fetch = require('node-fetch');
 else _fetch = fetch;
 
 if (typeof localStorage === 'undefined' || localStorage === null) {
     var LocalStorage = require('node-localstorage').LocalStorage;
-    localStorage = new LocalStorage('./scratch');
+    mainStorage = new LocalStorage('./scratch');
 }
-
-
 
 if (typeof sessionStorage === 'undefined' || sessionStorage === null) {
     sessionStorage = require('sessionstorage');
@@ -42,7 +41,7 @@ var ConnectMapper = function (OBJY, options) {
             _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
                 method: 'POST',
                 body: JSON.stringify({
-                    refreshToken: localStorage.getItem('refreshToken'),
+                    refreshToken: mainStorage.getItem('refreshToken'),
                 }),
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             })
@@ -55,7 +54,7 @@ var ConnectMapper = function (OBJY, options) {
                 .then((json) => {
                     console.log('json', json);
                     sessionStorage.setItem('accessToken', json.token.accessToken);
-                    localStorage.setItem('refreshToken', json.token.refreshToken);
+                    mainStorage.setItem('refreshToken', json.token.refreshToken);
                     this._genericApiCall(urlPart, method, body, success, error, app, count);
                 })
                 .catch((err) => {});
@@ -75,7 +74,7 @@ var ConnectMapper = function (OBJY, options) {
                 .then((res) => {
                     //if (res.status == 400) res.errStatus = 400;
                     if (res.status == 401) {
-                        if (localStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
+                        if (mainStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
                     }
                     return res.json();
                 })
@@ -108,7 +107,7 @@ var ConnectMapper = function (OBJY, options) {
                     .then((json) => {
                         localStorage.setItem('clientId', this.currentWorkspace);
                         sessionStorage.setItem('accessToken', json.token.accessToken);
-                        localStorage.setItem('refreshToken', json.token.refreshToken);
+                        mainStorage.setItem('refreshToken', json.token.refreshToken);
                         if (success) success(json);
                         else resolve(json);
                     })
@@ -153,7 +152,7 @@ var ConnectMapper = function (OBJY, options) {
                     .then((res) => res.json())
                     .then((json) => {
                         sessionStorage.removeItem('accessToken');
-                        localStorage.removeItem('refreshToken');
+                        mainStorage.removeItem('refreshToken');
                         if (success) success(json);
                         else resolve(json);
                     })
@@ -301,6 +300,10 @@ var ConnectMapper = function (OBJY, options) {
 
         remove: function (spooElement, success, error, app, client) {
             this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'DELETE', undefined, success, error, app);
+        },
+
+        turnOnSessionOnly: function () {
+            mainStorage = sessionStorage;
         },
     });
 };
