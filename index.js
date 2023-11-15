@@ -108,7 +108,7 @@ var ConnectMapper = function (OBJY, options) {
                 })
                     .then((res) => res.json())
                     .then((json) => {
-                        localStorage.setItem('clientId', this.currentWorkspace);
+                        mainStorage.setItem('clientId', this.currentWorkspace);
                         sessionStorage.setItem('accessToken', json.token.accessToken);
                         mainStorage.setItem('refreshToken', json.token.refreshToken);
                         if (success) success(json);
@@ -132,7 +132,7 @@ var ConnectMapper = function (OBJY, options) {
                 })
                     .then((res) => res.json())
                     .then((json) => {
-                        localStorage.setItem('clientId', this.currentWorkspace);
+                        mainStorage.setItem('clientId', this.currentWorkspace);
                         sessionStorage.setItem('accessToken', json.token.accessToken);
                         mainStorage.setItem('refreshToken', json.token.refreshToken);
                         if (success) success(json);
@@ -361,5 +361,4 @@ else if (typeof window !== 'undefined') {
     window.CONNECT = ConnectMapper;
 }
 
-if (0) typeof (await /2/) / 2;
-export default ConnectMapper;
+if(0)typeof await/2//2; export default ConnectMapper;

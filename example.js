@@ -9,7 +9,9 @@ OBJY.define({
 	storage: spoo
 })
 
-spoo.connect({client: "spoo", url: "https://my.piles.cards/api", username: "admin", password: "__..--12345"}, () => {
+spoo.connect({client: "spoo", url: "https://my.piles.cards/api"});
+
+spoo.login({username: "admin", password: "Test123!"}, () => {
 	console.log('connected');
 	/*OBJY.object({name:"22"}).add(() => {
 
@@ -18,7 +20,7 @@ spoo.connect({client: "spoo", url: "https://my.piles.cards/api", username: "admi
 	OBJY.objects({}).get(data => {
 		console.log('data:', data)
 
-		data.setName('Thieme2').update();
+		
 
 
 	}, err => {
