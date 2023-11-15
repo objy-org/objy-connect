@@ -66,10 +66,13 @@ var ConnectMapper = function (OBJY, options) {
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + urlPart;
 
             // if(count) url += '/count'
+            var headers = { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') };
+            if(body instanceof FormData) headers = { Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') }
+
             _fetch(url, {
                 method: method,
                 body: body,
-                headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') },
+                headers: headers,
             })
                 .then((res) => {
                     //if (res.status == 400) res.errStatus = 400;
@@ -185,6 +188,15 @@ var ConnectMapper = function (OBJY, options) {
                         else reject(err);
                     });
             });
+        },
+
+        path: function(app) {
+            var url;
+            if (!app) url = this.currentUrl + '/client/' + this.currentWorkspace + '/' + this.objectFamily;
+            else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + this.objectFamily;
+
+            url += '/stream';
+            return url + '?token=' + getAccessToken();
         },
 
         requestUserKey: function (data, success, error) {
@@ -319,7 +331,19 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         add: function (spooElement, success, error, app, client) {
-            this._genericApiCall(this.objectFamily, 'POST', JSON.stringify(spooElement), success, error, app);
+            var data = JSON.stringify(spooElement);
+
+            // Check if object is file (formdata)
+            if(spooElement.data) {
+                if(spooElement.data instanceof FormData) {
+                    data = spooElement;
+                }
+            } else if((spooElement.properties || {}).data) {
+                if(spooElement.properties.data instanceof FormData) {
+                    data = spooElement;
+                }
+            }
+            this._genericApiCall(this.objectFamily, 'POST', data, success, error, app);
         },
 
         remove: function (spooElement, success, error, app, client) {
