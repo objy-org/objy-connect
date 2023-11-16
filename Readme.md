@@ -1,6 +1,6 @@
-# SPOO Connect
+# OBJY Connect
 
-The mapper can be used as OBJY storage for interacting with any SPOO-based platform. Just define your object wrappers and use the connect mapper for storage.
+The mapper can be used as OBJY storage for interacting with OBJY platform. Just define your object wrappers and use the connect mapper for storage.
 
 # Documentation
 
