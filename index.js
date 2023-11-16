@@ -67,7 +67,10 @@ var ConnectMapper = function (OBJY, options) {
 
             // if(count) url += '/count'
             var headers = { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') };
-            if(body instanceof FormData) headers = { Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') }
+            
+            try {
+                if(body instanceof FormData) headers = { Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') }
+            } catch (e) {}
 
             _fetch(url, {
                 method: method,
@@ -334,15 +337,18 @@ var ConnectMapper = function (OBJY, options) {
             var data = JSON.stringify(spooElement);
 
             // Check if object is file (formdata)
-            if(spooElement.data) {
-                if(spooElement.data instanceof FormData) {
-                    data = spooElement;
+            try {
+                if(spooElement.data) {
+                    if(spooElement.data instanceof FormData) {
+                        data = spooElement;
+                    }
+                } else if((spooElement.properties || {}).data) {
+                    if(spooElement.properties.data instanceof FormData) {
+                        data = spooElement;
+                    }
                 }
-            } else if((spooElement.properties || {}).data) {
-                if(spooElement.properties.data instanceof FormData) {
-                    data = spooElement;
-                }
-            }
+            } catch(e){}
+
             this._genericApiCall(this.objectFamily, 'POST', data, success, error, app);
         },
 
