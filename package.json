@@ -1,19 +1,19 @@
 {
-  "name": "objy-connect",
-  "version": "0.0.56",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "node-fetch": "^2.7.0",
-    "node-localstorage": "^2.2.1",
-    "sessionstorage": "^0.1.0"
-  },
-  "devDependencies": {
-    "objy": "^0.6.984"
-  }
+    "name": "objy-connect",
+    "version": "0.0.57",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "node-fetch": "^2.7.0",
+        "node-localstorage": "^2.2.1",
+        "sessionstorage": "^0.1.0"
+    },
+    "devDependencies": {
+        "objy": "^0.6.984"
+    }
 }
