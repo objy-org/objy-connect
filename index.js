@@ -340,11 +340,11 @@ var ConnectMapper = function (OBJY, options) {
             try {
                 if(spooElement.data) {
                     if(spooElement.data instanceof FormData) {
-                        data = spooElement;
+                        data = spooElement.data;
                     }
                 } else if((spooElement.properties || {}).data) {
                     if(spooElement.properties.data instanceof FormData) {
-                        data = spooElement;
+                        data = spooElement.properties.data;
                     }
                 }
             } catch(e){}
