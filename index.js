@@ -193,10 +193,10 @@ var ConnectMapper = function (OBJY, options) {
             });
         },
 
-        path: function(app) {
+        path: function(objectFamily, id, app) {
             var url;
-            if (!app) url = this.currentUrl + '/client/' + this.currentWorkspace + '/' + this.objectFamily;
-            else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + this.objectFamily;
+            if (!app) url = this.currentUrl + '/client/' + this.currentWorkspace + '/' + objectFamily + '/' + id;
+            else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + objectFamily + '/' + id;
 
             url += '/stream';
             return url + '?token=' + getAccessToken();
