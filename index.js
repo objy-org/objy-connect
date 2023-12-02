@@ -199,7 +199,7 @@ var ConnectMapper = function (OBJY, options) {
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + objectFamily + '/' + id;
 
             url += '/stream';
-            return url + '?token=' + getAccessToken();
+            return url + '?token=' + sessionStorage.getItem('accessToken');
         },
 
         requestUserKey: function (data, success, error) {
