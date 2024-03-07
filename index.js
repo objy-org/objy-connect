@@ -268,7 +268,7 @@ var ConnectMapper = function (OBJY, options) {
             });
         },
 
-        requestClientKey: function (email, success, error) {
+        requestClientKey: function (data, success, error) {
             return new Promise((resolve, reject) => {
                 _fetch(this.currentUrl + '/client/register', {
                     method: 'POST',
@@ -296,6 +296,9 @@ var ConnectMapper = function (OBJY, options) {
                     body: JSON.stringify({
                         registrationKey: data.registrationKey,
                         clientname: data.clientname,
+                        username: data.username,
+                        email: data.email,
+                        password: data.password,
                     }),
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 })
