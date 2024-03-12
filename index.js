@@ -268,6 +268,34 @@ var ConnectMapper = function (OBJY, options) {
             });
         },
 
+        changePassword: function (data, success, error) {
+            return new Promise((resolve, reject) => {
+                if(sessionStorage.getItem('accessToken') ){
+                    _fetch(this.currentUrl + '/client/' + this.currentWorkspace + `/user/${data.userId}/password`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            old: data.old,
+                            new: data.new,
+                        }),
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') },
+                    })
+                        .then((res) => res.json())
+                        .then((json) => {
+                            if (success) success(json);
+                            else resolve(json);
+                        })
+                        .catch((err) => {
+                            if (error) error(err);
+                            else reject(err);
+                        });                    
+                } else {
+                    if (error) error("User not authenticated");
+                    else reject("User not authenticated");
+                }
+
+            });
+        },
+
         requestClientKey: function (data, success, error) {
             return new Promise((resolve, reject) => {
                 _fetch(this.currentUrl + '/client/register', {
