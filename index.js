@@ -330,7 +330,13 @@ var ConnectMapper = function (OBJY, options) {
                     }),
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 })
-                    .then((res) => res.json())
+                    .then(
+                        async (res) => {
+                            if(res.status === 400){
+                                if (error) error(await res.text());
+                                else reject(await res.text());
+                            } else res.json()
+                        })
                     .then((json) => {
                         if (success) success(json);
                         else resolve(json);
