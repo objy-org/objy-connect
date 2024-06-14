@@ -268,7 +268,35 @@ var ConnectMapper = function (OBJY, options) {
             });
         },
 
-        requestClientKey: function (email, success, error) {
+        changePassword: function (data, success, error) {
+            return new Promise((resolve, reject) => {
+                if(sessionStorage.getItem('accessToken') ){
+                    _fetch(this.currentUrl + '/client/' + this.currentWorkspace + `/user/${data.userId}/password`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            old: data.old,
+                            new: data.new,
+                        }),
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') },
+                    })
+                        .then((res) => res.json())
+                        .then((json) => {
+                            if (success) success(json);
+                            else resolve(json);
+                        })
+                        .catch((err) => {
+                            if (error) error(err);
+                            else reject(err);
+                        });                    
+                } else {
+                    if (error) error("User not authenticated");
+                    else reject("User not authenticated");
+                }
+
+            });
+        },
+
+        requestClientKey: function (data, success, error) {
             return new Promise((resolve, reject) => {
                 _fetch(this.currentUrl + '/client/register', {
                     method: 'POST',
@@ -296,10 +324,19 @@ var ConnectMapper = function (OBJY, options) {
                     body: JSON.stringify({
                         registrationKey: data.registrationKey,
                         clientname: data.clientname,
+                        username: data.username,
+                        email: data.email,
+                        password: data.password,
                     }),
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 })
-                    .then((res) => res.json())
+                    .then(
+                        async (res) => {
+                            if(res.status === 400){
+                                if (error) error(await res.text());
+                                else reject(await res.text());
+                            } else res.json()
+                        })
                     .then((json) => {
                         if (success) success(json);
                         else resolve(json);
