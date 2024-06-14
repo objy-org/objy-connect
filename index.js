@@ -334,6 +334,13 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         add: function (spooElement, success, error, app, client) {
+
+            if(Array.isArray(spooElement)){
+                spooElement.forEach(el => {
+                    el.role = this.objectFamily;
+                })
+            } else spooElement.role = this.objectFamily;
+
             var data = JSON.stringify(spooElement);
 
             // Check if object is file (formdata)
