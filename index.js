@@ -14,6 +14,16 @@ if (typeof sessionStorage === 'undefined' || sessionStorage === null) {
     sessionStorage = require('sessionstorage');
 }
 
+function parseJwt (token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+}
+
 function objToQueryString(obj, flags) {
     const parts = [];
     let _i;
@@ -193,13 +203,41 @@ var ConnectMapper = function (OBJY, options) {
             });
         },
 
-        path: function(objectFamily, id, app) {
+        path: function(objectFamily, id, app, success, error) {
             var url;
             if (!app) url = this.currentUrl + '/client/' + this.currentWorkspace + '/' + objectFamily + '/' + id;
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + objectFamily + '/' + id;
 
             url += '/stream';
-            return url + '?token=' + sessionStorage.getItem('accessToken');
+
+            return new Promise((resolve, reject) => {
+
+                var token = parseJwt(sessionStorage.getItem('accessToken'));
+                var utcSeconds = token.exp;
+                var d = new Date(0);
+                var now = new Date();
+                d.setUTCSeconds(utcSeconds);
+
+                if(d.getTime() <= now.getTime()){
+                    // relogin
+                    relogin(_success => {
+                        var _url = url + '?token=' + sessionStorage.getItem('accessToken');
+
+                        if(success) success(_url)
+                        else resolve(_url)
+                    }, _error => {
+                        if(error) error(_error);
+                        else reject(_error)
+                    })
+                } else {
+                    var _url = url + '?token=' + sessionStorage.getItem('accessToken');
+
+                    if(success) success(_url);
+                    else resolve(_url);
+                }
+            });
+
+            
         },
 
         requestUserKey: function (data, success, error) {
