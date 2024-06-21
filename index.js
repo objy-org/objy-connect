@@ -87,17 +87,21 @@ var ConnectMapper = function (OBJY, options) {
                 body: body,
                 headers: headers,
             })
-                .then((res) => {
+                .then(async (res) => {
                     //if (res.status == 400) res.errStatus = 400;
                     if (res.status == 401) {
                         if (mainStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
+                    } else if (res.status == 400) {
+                        throw res.json();
                     }
                     return res.json();
                 })
                 .then((json) => {
                     success(json);
                 })
-                .catch((err) => {});
+                .catch((err) => {
+                    error(err)
+                });
         },
 
         connect: function (credentials, success, error, options) {
