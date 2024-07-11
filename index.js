@@ -92,7 +92,8 @@ var ConnectMapper = function (OBJY, options) {
                     if (res.status == 401) {
                         if (mainStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
                     } else if (res.status == 400) {
-                        throw res.json();
+                        return error()
+                        //throw res.json();
                     }
                     return res.json();
                 })
@@ -100,7 +101,7 @@ var ConnectMapper = function (OBJY, options) {
                     success(json);
                 })
                 .catch((err) => {
-                    error(err)
+                    //error(err)
                 });
         },
 
