@@ -148,7 +148,11 @@ var ConnectMapper = function (OBJY, options) {
                     }),
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 })
-                    .then((res) => res.json())
+                    .then((res) => {
+                        if (res.status == 401) {
+                            throw { error: 'refreshing token failed' }
+                        } else return res.json()}
+                    )
                     .then((json) => {
                         mainStorage.setItem('clientId', this.currentWorkspace);
                         sessionStorage.setItem('accessToken', json.token.accessToken);
