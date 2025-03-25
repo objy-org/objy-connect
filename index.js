@@ -1,3 +1,5 @@
+const offline = require('./offline');
+
 var _fetch = null;
 var _nodejs = typeof process !== 'undefined' && process.versions && process.versions.node;
 var mainStorage = null;
@@ -14,12 +16,18 @@ if (typeof sessionStorage === 'undefined' || sessionStorage === null) {
     sessionStorage = require('sessionstorage');
 }
 
-function parseJwt (token) {
+function parseJwt(token) {
     var base64Url = token.split('.')[1];
     var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
+    var jsonPayload = decodeURIComponent(
+        window
+            .atob(base64)
+            .split('')
+            .map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            })
+            .join('')
+    );
 
     return JSON.parse(jsonPayload);
 }
@@ -77,9 +85,9 @@ var ConnectMapper = function (OBJY, options) {
 
             // if(count) url += '/count'
             var headers = { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') };
-            
+
             try {
-                if(body instanceof FormData) headers = { Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') }
+                if (body instanceof FormData) headers = { Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') };
             } catch (e) {}
 
             _fetch(url, {
@@ -92,7 +100,7 @@ var ConnectMapper = function (OBJY, options) {
                     if (res.status == 401) {
                         if (mainStorage.getItem('refreshToken')) this._relogin(urlPart, method, body, success, error, app, count);
                     } else if (res.status == 400) {
-                        return error()
+                        return error();
                         //throw res.json();
                     }
                     return res.json();
@@ -144,15 +152,15 @@ var ConnectMapper = function (OBJY, options) {
                 _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token', {
                     method: 'POST',
                     body: JSON.stringify({
-                        refreshToken: mainStorage.getItem('refreshToken')
+                        refreshToken: mainStorage.getItem('refreshToken'),
                     }),
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 })
                     .then((res) => {
                         if (res.status == 401) {
-                            throw { error: 'refreshing token failed' }
-                        } else return res.json()}
-                    )
+                            throw { error: 'refreshing token failed' };
+                        } else return res.json();
+                    })
                     .then((json) => {
                         mainStorage.setItem('clientId', this.currentWorkspace);
                         sessionStorage.setItem('accessToken', json.token.accessToken);
@@ -212,7 +220,7 @@ var ConnectMapper = function (OBJY, options) {
             });
         },
 
-        path: function(objectFamily, id, app, success, error) {
+        path: function (objectFamily, id, app, success, error) {
             var url;
             if (!app) url = this.currentUrl + '/client/' + this.currentWorkspace + '/' + objectFamily + '/' + id;
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + objectFamily + '/' + id;
@@ -220,33 +228,33 @@ var ConnectMapper = function (OBJY, options) {
             url += '/stream';
 
             return new Promise((resolve, reject) => {
-
                 var token = parseJwt(sessionStorage.getItem('accessToken'));
                 var utcSeconds = token.exp;
                 var d = new Date(0);
                 var now = new Date();
                 d.setUTCSeconds(utcSeconds);
 
-                if(d.getTime() <= now.getTime()){
+                if (d.getTime() <= now.getTime()) {
                     // relogin
-                    relogin(_success => {
-                        var _url = url + '?token=' + sessionStorage.getItem('accessToken');
+                    relogin(
+                        (_success) => {
+                            var _url = url + '?token=' + sessionStorage.getItem('accessToken');
 
-                        if(success) success(_url)
-                        else resolve(_url)
-                    }, _error => {
-                        if(error) error(_error);
-                        else reject(_error)
-                    })
+                            if (success) success(_url);
+                            else resolve(_url);
+                        },
+                        (_error) => {
+                            if (error) error(_error);
+                            else reject(_error);
+                        }
+                    );
                 } else {
                     var _url = url + '?token=' + sessionStorage.getItem('accessToken');
 
-                    if(success) success(_url);
+                    if (success) success(_url);
                     else resolve(_url);
                 }
             });
-
-            
         },
 
         requestUserKey: function (data, success, error) {
@@ -317,14 +325,18 @@ var ConnectMapper = function (OBJY, options) {
 
         changePassword: function (data, success, error) {
             return new Promise((resolve, reject) => {
-                if(sessionStorage.getItem('accessToken') ){
+                if (sessionStorage.getItem('accessToken')) {
                     _fetch(this.currentUrl + '/client/' + this.currentWorkspace + `/user/${data.userId}/password`, {
                         method: 'PATCH',
                         body: JSON.stringify({
                             old: data.old,
                             new: data.new,
                         }),
-                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                            Authorization: 'Baerer ' + sessionStorage.getItem('accessToken'),
+                        },
                     })
                         .then((res) => res.json())
                         .then((json) => {
@@ -334,12 +346,11 @@ var ConnectMapper = function (OBJY, options) {
                         .catch((err) => {
                             if (error) error(err);
                             else reject(err);
-                        });                    
+                        });
                 } else {
-                    if (error) error("User not authenticated");
-                    else reject("User not authenticated");
+                    if (error) error('User not authenticated');
+                    else reject('User not authenticated');
                 }
-
             });
         },
 
@@ -377,13 +388,12 @@ var ConnectMapper = function (OBJY, options) {
                     }),
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 })
-                    .then(
-                        async (res) => {
-                            if(res.status === 400){
-                                if (error) error(await res.text());
-                                else reject(await res.text());
-                            } else res.json()
-                        })
+                    .then(async (res) => {
+                        if (res.status === 400) {
+                            if (error) error(await res.text());
+                            else reject(await res.text());
+                        } else res.json();
+                    })
                     .then((json) => {
                         if (success) success(json);
                         else resolve(json);
@@ -396,59 +406,110 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         getById: function (id, success, error, app, client) {
-            this._genericApiCall(this.objectFamily + '/' + id, 'GET', undefined, success, error, app);
+            if (!options.offlineMode || !offline.isOffline()) {
+                this._genericApiCall(this.objectFamily + '/' + id, 'GET', undefined, success, error, app);
+            } else {
+                new Promise(async (resolve, reject) => {
+                    let res = await offline.getById(id, app, client);
+
+                    success(res);
+                });
+            }
         },
 
         getByCriteria: function (criteria, success, error, app, client, flags) {
-            this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app);
+            if (!options.offlineMode || !offline.isOffline()) {
+                this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app);
+            } else {
+                new Promise(async (resolve, reject) => {
+                    let res = await offline.getByCriteria(criteria, app, client);
+
+                    success(res);
+                });
+            }
         },
 
         count: function (criteria, success, error, app, client, flags) {
-            this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app, true);
+            if (!options.offlineMode || !offline.isOffline()) {
+                this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app, true);
+            } else {
+                new Promise(async (resolve, reject) => {
+                    let res = await offline.count(criteria, app, client);
+
+                    success(res);
+                });
+            }
         },
 
         update: function (spooElement, success, error, app, client) {
-            var alterData = [];
-            OBJY.alterSequence.forEach((a) => {
-                if (a[Object.keys(a)[0]].length > 1) a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]]);
-                else a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]])[0];
-                alterData.push(a);
-            });
-            this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'PATCH', JSON.stringify(alterData), success, error, app);
+            if (!options.offlineMode || !offline.isOffline()) {
+                var alterData = [];
+                OBJY.alterSequence.forEach((a) => {
+                    if (a[Object.keys(a)[0]].length > 1) a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]]);
+                    else a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]])[0];
+                    alterData.push(a);
+                });
+                this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'PATCH', JSON.stringify(alterData), success, error, app);
+            } else {
+                new Promise(async (resolve, reject) => {
+                    let res = await offline.update(spooElement, app, client);
+
+                    success(res);
+                });
+            }
         },
 
         add: function (spooElement, success, error, app, client) {
+            if (!options.offlineMode || !offline.isOffline()) {
+                if (Array.isArray(spooElement)) {
+                    spooElement.forEach((el) => {
+                        el.role = this.objectFamily;
+                    });
+                } else spooElement.role = this.objectFamily;
 
-            if(Array.isArray(spooElement)){
-                spooElement.forEach(el => {
-                    el.role = this.objectFamily;
-                })
-            } else spooElement.role = this.objectFamily;
+                var data = JSON.stringify(spooElement);
 
-            var data = JSON.stringify(spooElement);
-
-            // Check if object is file (formdata)
-            try {
-                if(spooElement.data) {
-                    if(spooElement.data instanceof FormData) {
-                        data = spooElement.data;
+                // Check if object is file (formdata)
+                try {
+                    if (spooElement.data) {
+                        if (spooElement.data instanceof FormData) {
+                            data = spooElement.data;
+                        }
+                    } else if ((spooElement.properties || {}).data) {
+                        if (spooElement.properties.data instanceof FormData) {
+                            data = spooElement.properties.data;
+                        }
                     }
-                } else if((spooElement.properties || {}).data) {
-                    if(spooElement.properties.data instanceof FormData) {
-                        data = spooElement.properties.data;
-                    }
-                }
-            } catch(e){}
+                } catch (e) {}
 
-            this._genericApiCall(this.objectFamily, 'POST', data, success, error, app);
+                this._genericApiCall(this.objectFamily, 'POST', data, success, error, app);
+            } else {
+                new Promise(async (resolve, reject) => {
+                    let res = await offline.add(spooElement, app, client);
+
+                    success(res);
+                });
+            }
         },
 
         remove: function (spooElement, success, error, app, client) {
-            this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'DELETE', undefined, success, error, app);
+            if (!options.offlineMode || !offline.isOffline()) {
+                this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'DELETE', undefined, success, error, app);
+            } else {
+                new Promise(async (resolve, reject) => {
+                    let res = await offline.remove(spooElement, app, client);
+
+                    success(res);
+                });
+            }
         },
 
         turnOnSessionOnly: function () {
             mainStorage = sessionStorage;
+        },
+
+        loadOfflineData: function () {
+            offline.loadOfflineData();
         },
     });
 };
@@ -458,4 +519,5 @@ else if (typeof window !== 'undefined') {
     window.CONNECT = ConnectMapper;
 }
 
-if(0)typeof await/2//2; export default ConnectMapper;
+if (0) typeof (await /2/) / 2;
+export default ConnectMapper;
