@@ -1,8 +1,9 @@
-const offline = require('./offline');
+import offline from './offline';
 
 var _fetch = null;
 var _nodejs = typeof process !== 'undefined' && process.versions && process.versions.node;
 var mainStorage = null;
+var offlineMode = false;
 
 if (_nodejs) _fetch = require('node-fetch');
 else _fetch = fetch;
@@ -113,9 +114,10 @@ var ConnectMapper = function (OBJY, options) {
                 });
         },
 
-        connect: function (credentials, success, error, options) {
+        connect: function (credentials, success, error, options = {}) {
             this.currentWorkspace = credentials.client;
             this.currentUrl = credentials.url;
+
             return this;
         },
 
@@ -176,21 +178,27 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         authenticated: function (callback) {
-            return new Promise((resolve, reject) => {
-                _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/authenticated?token=' + sessionStorage.getItem('accessToken'), {
-                    method: 'GET',
-                    headers: { Accept: 'application/json' },
-                })
-                    .then((res) => res.json())
-                    .then((json) => {
-                        if (callback) callback(json.authenticated || json.auth);
-                        else resolve(json.authenticated || json.auth);
+            console.log('authenticating...', offlineMode, offline.isOffline());
+
+            if (!offlineMode || !offline.isOffline()) {
+                return new Promise((resolve, reject) => {
+                    _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/authenticated?token=' + sessionStorage.getItem('accessToken'), {
+                        method: 'GET',
+                        headers: { Accept: 'application/json' },
                     })
-                    .catch((err) => {
-                        if (error) error(err);
-                        else reject(err);
-                    });
-            });
+                        .then((res) => res.json())
+                        .then((json) => {
+                            if (callback) callback(json.authenticated || json.auth);
+                            else resolve(json.authenticated || json.auth);
+                        })
+                        .catch((err) => {
+                            if (error) error(err);
+                            else reject(err);
+                        });
+                });
+            } else {
+                return true;
+            }
         },
 
         logout: function (success, error) {
@@ -406,11 +414,11 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         getById: function (id, success, error, app, client) {
-            if (!options.offlineMode || !offline.isOffline()) {
+            if (!offlineMode || !offline.isOffline()) {
                 this._genericApiCall(this.objectFamily + '/' + id, 'GET', undefined, success, error, app);
             } else {
                 new Promise(async (resolve, reject) => {
-                    let res = await offline.getById(id, app, client);
+                    let res = await offline.getById(id, this.objectFamily, app);
 
                     success(res);
                 });
@@ -418,11 +426,13 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         getByCriteria: function (criteria, success, error, app, client, flags) {
-            if (!options.offlineMode || !offline.isOffline()) {
+            console.log(criteria, flags);
+
+            if (!offlineMode || !offline.isOffline()) {
                 this._genericApiCall(this.objectFamily + 's/?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app);
             } else {
                 new Promise(async (resolve, reject) => {
-                    let res = await offline.getByCriteria(criteria, app, client);
+                    let res = await offline.getByCriteria(criteria, this.objectFamily, app, flags);
 
                     success(res);
                 });
@@ -430,11 +440,11 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         count: function (criteria, success, error, app, client, flags) {
-            if (!options.offlineMode || !offline.isOffline()) {
+            if (!offlineMode || !offline.isOffline()) {
                 this._genericApiCall(this.objectFamily + 's/count?' + objToQueryString(criteria, flags), 'GET', undefined, success, error, app, true);
             } else {
                 new Promise(async (resolve, reject) => {
-                    let res = await offline.count(criteria, app, client);
+                    let res = await offline.count(criteria, this.objectFamily, app, flags);
 
                     success(res);
                 });
@@ -442,7 +452,7 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         update: function (spooElement, success, error, app, client) {
-            if (!options.offlineMode || !offline.isOffline()) {
+            if (!offlineMode || !offline.isOffline()) {
                 var alterData = [];
                 OBJY.alterSequence.forEach((a) => {
                     if (a[Object.keys(a)[0]].length > 1) a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]]);
@@ -452,7 +462,7 @@ var ConnectMapper = function (OBJY, options) {
                 this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'PATCH', JSON.stringify(alterData), success, error, app);
             } else {
                 new Promise(async (resolve, reject) => {
-                    let res = await offline.update(spooElement, app, client);
+                    let res = await offline.update(spooElement, this.objectFamily, app);
 
                     success(res);
                 });
@@ -460,7 +470,7 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         add: function (spooElement, success, error, app, client) {
-            if (!options.offlineMode || !offline.isOffline()) {
+            if (!offlineMode || !offline.isOffline()) {
                 if (Array.isArray(spooElement)) {
                     spooElement.forEach((el) => {
                         el.role = this.objectFamily;
@@ -485,7 +495,7 @@ var ConnectMapper = function (OBJY, options) {
                 this._genericApiCall(this.objectFamily, 'POST', data, success, error, app);
             } else {
                 new Promise(async (resolve, reject) => {
-                    let res = await offline.add(spooElement, app, client);
+                    let res = await offline.add(spooElement, this.objectFamily, app);
 
                     success(res);
                 });
@@ -493,11 +503,11 @@ var ConnectMapper = function (OBJY, options) {
         },
 
         remove: function (spooElement, success, error, app, client) {
-            if (!options.offlineMode || !offline.isOffline()) {
+            if (!offlineMode || !offline.isOffline()) {
                 this._genericApiCall(this.objectFamily + '/' + spooElement._id, 'DELETE', undefined, success, error, app);
             } else {
                 new Promise(async (resolve, reject) => {
-                    let res = await offline.remove(spooElement, app, client);
+                    let res = await offline.remove(spooElement, this.objectFamily, app);
 
                     success(res);
                 });
@@ -508,8 +518,14 @@ var ConnectMapper = function (OBJY, options) {
             mainStorage = sessionStorage;
         },
 
+        initOfflineMode: function () {
+            console.log('initOfflineMode');
+            offlineMode = true;
+            offline.init(OBJY, ['objects', 'users', 'templates']);
+        },
+
         loadOfflineData: function () {
-            offline.loadOfflineData();
+            //offline.loadOfflineData();
         },
     });
 };
