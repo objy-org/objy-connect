@@ -5,6 +5,8 @@ let mainStorage = null;
 let offline = false;
 let OBJY = null;
 let db = null;
+let storeFamilies = ['objects', 'users', 'templates'];
+let syncedCb = null;
 
 const newLogTemplate = {
     name: '',
@@ -19,7 +21,7 @@ const newLogTemplate = {
                     value: '',
                     type: 'shortText',
                 },
-                _id: {
+                id: {
                     value: '',
                     type: 'shortText',
                 },
@@ -40,7 +42,7 @@ const newLogTemplate = {
                     value: '',
                     type: 'shortText',
                 },
-                _id: {
+                id: {
                     value: '',
                     type: 'shortText',
                 },
@@ -124,7 +126,8 @@ function createLog(obj, user, opts = { app: null, mode: 'update', initObj: null,
         log.type = 'changelog_update';
     }
 
-    for (var fieldId in obj.properties) {
+    /*
+    for (var fieldId of Object.keys(obj.properties)) {
         if (
             property_blacklist.indexOf(fieldId) == -1 &&
             obj.properties[fieldId].type != 'event' &&
@@ -180,8 +183,8 @@ function createLog(obj, user, opts = { app: null, mode: 'update', initObj: null,
 
     log.properties.object.properties.name.value = obj.name;
 
-    if (opts?.mode == 'clone') log.properties.object.properties._id.value = opts?.cloneId;
-    else log.properties.object.properties._id.value = obj._id;
+    if (opts?.mode == 'clone') log.properties.object.properties.id.value = opts?.cloneId;
+    else log.properties.object.properties.id.value = obj._id;
 
     if (obj.inherits) {
         log.properties.object.properties.inherits.value = obj.inherits;
@@ -195,8 +198,9 @@ function createLog(obj, user, opts = { app: null, mode: 'update', initObj: null,
     log.lastModified = log.created;
 
     log.properties.user.properties.name.value = user.username;
-    log.properties.user.properties._id.value = user._id;
+    log.properties.user.properties.id.value = user._id;
     log.properties.time.value = time;
+    */
 
     return log;
 }
@@ -204,7 +208,7 @@ function createLog(obj, user, opts = { app: null, mode: 'update', initObj: null,
 function getMultiRefsString(refs) {
     var refsArray = [];
 
-    for (var refId in refs) {
+    for (var refId of refs) {
         refsArray.push(refId);
     }
 
@@ -235,13 +239,19 @@ function init(_OBJY, objFamilies, opts = {}) {
 
     OBJY = _OBJY;
 
+    if (opts?.synced) {
+        syncedCb = opts.synced;
+    }
+
     db = new dexie('offline');
+
+    storeFamilies = objFamilies;
 
     objFamilies.forEach((objFamily) => {
         stores[objFamily] = '&_id,inherits,type,created';
     });
 
-    stores['eventlogs'] = '&_id,inherits,type,created';
+    stores['logs'] = '++_id';
 
     db.version(1).stores(stores);
 
@@ -251,24 +261,22 @@ function init(_OBJY, objFamilies, opts = {}) {
     } else mainStorage = localStorage;
 
     if (window) {
-        console.log('window.navigator.onLine', window.navigator.onLine);
-
         offline = !window.navigator.onLine;
 
         window.addEventListener('online', () => {
             offline = false;
+
+            syncOfflineData();
         });
 
         window.addEventListener('offline', () => {
             offline = true;
-
-            syncOfflineData();
         });
     }
 
     console.log('is not offline: ', !offline, window.navigator.onLine);
 
-    if (!offline) loadOfflineData();
+    //if (!offline) loadOfflineData();
 }
 
 function resolveGenericQuery(query, model, user = {}) {
@@ -410,49 +418,53 @@ async function getOfflineData(query, objFamily, page = 1) {
 }
 
 async function syncOfflineData() {
-    let objFamilies = ['objects', 'users', 'templates'];
+    let syncTypeMap = {
+        add: '_added',
+        update: '_updated',
+        remove: '_removed',
+    };
 
-    for (var objFamily of objFamilies) {
+    console.log('syncOfflineData');
+
+    for (var objFamily of storeFamilies) {
         let res = null;
+        let objRole = objFamily.slice(0, -1).toLowerCase();
 
         for (var syncType of ['add', 'update', 'remove']) {
-            let dexieQuery = { synced: false };
-            let synced = false;
-            let syncTypePropKey = 'added';
+            let dexieQuery = { _synced: false };
+            let synced = true;
 
-            dexieQuery[syncType] = true;
+            dexieQuery[syncTypeMap[syncType]] = true;
 
             try {
-                res = await db[objFamily].get(dexieQuery);
+                res = await db[objFamily].filter((obj) => filterObj(obj, dexieQuery)).toArray();
             } catch (err) {
                 console.log(err);
             }
 
-            for (var obj in res) {
+            for (var obj of res) {
                 var objId = obj._id;
                 var eventlogs = [];
-                delete obj._id;
+                //delete obj._id;
 
                 try {
-                    await OBJY[objFamily](obj).add();
+                    await OBJY[objRole](obj)[syncType]();
                 } catch (err) {
                     console.log(err);
-                    synced = true;
+                    synced = false;
                 }
 
                 if (synced) {
                     obj._synced = true;
 
                     try {
-                        await await db.eventlogs
-                            //.orderBy(orderBy)
-                            .put(obj);
+                        await db[objFamily].put(obj);
                     } catch (err) {
                         console.log(err);
                     }
 
                     try {
-                        eventlogs = await await db.eventlogs
+                        eventlogs = await db.logs
                             //.orderBy(orderBy)
                             .filter((obj) => filterObj(obj, { 'properties.object.properties._id.value': objId }))
                             .toArray();
@@ -460,11 +472,11 @@ async function syncOfflineData() {
                         console.log(err);
                     }
 
-                    for (var eventlog in eventlogs) {
+                    for (var eventlog of eventlogs) {
                         eventlog._synced = true;
 
                         try {
-                            await await db.eventlogs
+                            await db.logs
                                 //.orderBy(orderBy)
                                 .put(eventlog);
                         } catch (err) {
@@ -474,12 +486,13 @@ async function syncOfflineData() {
                 }
             }
         }
+
+        if (syncedCb) syncedCb();
     }
 }
 
-async function loadOfflineData() {
+async function loadOfflineData(success, error) {
     let offlineStorageMap = null;
-    let objFamilies = ['objects', 'users', 'templates'];
 
     if (!mainStorage.offlineStorageMap) return;
 
@@ -487,7 +500,7 @@ async function loadOfflineData() {
 
     offlineStorageMap = JSON.parse(mainStorage.offlineStorageMap);
 
-    for (var objFamily of objFamilies) {
+    for (var objFamily of storeFamilies) {
         let objs = [];
 
         for (var app of Object.keys(offlineStorageMap)) {
@@ -505,8 +518,6 @@ async function loadOfflineData() {
 
                         query.applications = { $in: [app] };
 
-                        console.log(objFamily, query);
-
                         res = await getOfflineData(query, objFamily);
 
                         if (res?.length > 0) {
@@ -519,16 +530,14 @@ async function loadOfflineData() {
             }
         }
 
-        console.log(objs);
-
-        console.log('objsLength: ', objFamily, objs?.length);
-
         if (!offline) {
             if (objs?.length > 0) {
                 await db[objFamily].bulkPut(objs);
             }
         }
     }
+
+    if (success) success();
 }
 
 function resolveObj(obj) {
@@ -563,7 +572,7 @@ function getObjValueByPropKey(obj, propKey) {
     let propKeyNotFound = false;
 
     propKeyParts.forEach((propKeyPart) => {
-        if (!propKeyNotFound && objValue[propKeyPart]) {
+        if (!propKeyNotFound && (objValue[propKeyPart] || objValue[propKeyPart] === false)) {
             objValue = objValue[propKeyPart];
         } else propKeyNotFound = true;
     });
@@ -614,7 +623,7 @@ function filterObj(obj, query) {
 async function getById(id, objFamily, app) {
     let res = null;
 
-    console.log(id, objFamily, app);
+    if (!storeFamilies.includes(objFamily + 's')) return null;
 
     try {
         res = await db[objFamily + 's'].get({ _id: id });
@@ -622,8 +631,6 @@ async function getById(id, objFamily, app) {
         console.log(err);
         return null;
     }
-
-    console.log(res);
 
     return res || null;
 }
@@ -634,7 +641,7 @@ async function getByCriteria(criteria, objFamily, app, flag) {
     let page = flag?.$page || 1;
     let pageSize = flag?.$pageSize || 20;
 
-    console.log(criteria, objFamily, app, page, pageSize, page - 1 * 20);
+    if (!storeFamilies.includes(objFamily + 's')) return [];
 
     try {
         res = await db[objFamily + 's']
@@ -648,8 +655,6 @@ async function getByCriteria(criteria, objFamily, app, flag) {
         return [];
     }
 
-    console.log(res);
-
     return res || [];
 }
 
@@ -657,7 +662,7 @@ async function count(criteria, objFamily, app, flag) {
     let res = null;
     let orderBy = 'created';
 
-    console.log(criteria, objFamily, app);
+    if (!storeFamilies.includes(objFamily + 's')) return [];
 
     try {
         res = await db[objFamily + 's']
@@ -668,8 +673,6 @@ async function count(criteria, objFamily, app, flag) {
         console.log(err);
         return [];
     }
-
-    console.log('count: ', res);
 
     return res || [];
 }
@@ -690,9 +693,9 @@ async function update(updatedObj, objFamily, app) {
 
         if (log) {
             try {
-                await db['eventlogs'].put(log);
+                await db.logs.put(resolveObj(log));
             } catch (err) {
-                console.log(err);
+                console.error(err);
             }
         }
     }
@@ -707,8 +710,6 @@ async function update(updatedObj, objFamily, app) {
         return null;
     }
 
-    console.log(res);
-
     return res || null;
 }
 
@@ -718,9 +719,9 @@ async function add(addedObj, objFamily, app) {
 
     if (log) {
         try {
-            await db['eventlogs'].put(log);
+            await db.logs.put(resolveObj(log));
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }
 
@@ -734,7 +735,12 @@ async function add(addedObj, objFamily, app) {
         return null;
     }
 
-    console.log(res);
+    try {
+        res = await db[objFamily + 's'].get({ _id: res });
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
 
     return res || null;
 }
@@ -745,7 +751,7 @@ async function remove(removedObj, objFamily, app) {
 
     if (log) {
         try {
-            await db['eventlogs'].put(log);
+            await db.logs.put(resolveObj(log));
         } catch (err) {
             console.log(err);
         }
@@ -760,8 +766,6 @@ async function remove(removedObj, objFamily, app) {
         console.log(err);
         return null;
     }
-
-    console.log(res);
 
     return res || null;
 }

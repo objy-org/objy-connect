@@ -518,14 +518,14 @@ var ConnectMapper = function (OBJY, options) {
             mainStorage = sessionStorage;
         },
 
-        initOfflineMode: function () {
+        initOfflineMode: function (user, success, syncedCb) {
             console.log('initOfflineMode');
             offlineMode = true;
-            offline.init(OBJY, ['objects', 'users', 'templates']);
+            offline.init(OBJY, ['objects', 'users', 'templates'], { success, synced: syncedCb, user: user });
         },
 
-        loadOfflineData: function () {
-            //offline.loadOfflineData();
+        loadOfflineData: function (success, error) {
+            offline.loadOfflineData(success, error);
         },
     });
 };
