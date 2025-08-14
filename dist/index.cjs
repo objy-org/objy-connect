@@ -1,3 +1,6 @@
+'use strict';
+
+let _fetch = null;
 let _nodejs = typeof process !== 'undefined' && process.versions && process.versions.node;
 let mainStorage = null;
 let sessionStorage = null;
@@ -485,4 +488,5 @@ if (typeof window !== 'undefined') {
     window.CONNECT = ConnectMapper;
 }
 
-export default ConnectMapper;
+module.exports = ConnectMapper;
+//# sourceMappingURL=index.cjs.map
