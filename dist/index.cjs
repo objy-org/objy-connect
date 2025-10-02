@@ -481,6 +481,81 @@ const ConnectMapper = function (OBJY, options) {
         turnOnSessionOnly: function () {
             mainStorage = sessionStorage;
         },
+
+        getTwoFaMethod: function (method, success, error) {
+            return new Promise((resolve, reject) => {
+                _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/twoFaMethod', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        Authorization: 'Baerer ' + sessionStorage.getItem('accessToken'),
+                    },
+                })
+                    .then(async (res) => {
+                        if (res.ok) {
+                            return res.json();
+                        } else {
+                            let errorData = null;
+
+                            try {
+                                errorData = await res.json();
+                            } catch (err) {
+                                throw err;
+                            }
+
+                            throw errorData;
+                        }
+                    })
+                    .then((json) => {
+                        if (success) success(json);
+                        else resolve(json);
+                    })
+                    .catch((err) => {
+                        if (error) error(err);
+                        else reject(err);
+                    });
+            });
+        },
+
+        setTwoFaMethod: function (method, success, error) {
+            return new Promise((resolve, reject) => {
+                _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/twoFaMethod', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        method: method,
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        Authorization: 'Baerer ' + sessionStorage.getItem('accessToken'),
+                    },
+                })
+                    .then(async (res) => {
+                        if (res.ok) {
+                            return res.json();
+                        } else {
+                            let errorData = null;
+
+                            try {
+                                errorData = await res.json();
+                            } catch (err) {
+                                throw err;
+                            }
+
+                            throw errorData;
+                        }
+                    })
+                    .then((json) => {
+                        if (success) success(json);
+                        else resolve(json);
+                    })
+                    .catch((err) => {
+                        if (error) error(err);
+                        else reject(err);
+                    });
+            });
+        },
     });
 };
 
