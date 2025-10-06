@@ -1,6 +1,6 @@
 {
     "name": "objy-connect",
-    "version": "0.0.67",
+    "version": "0.0.68",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -21,6 +21,10 @@
         ".": {
             "require": "./dist/index.cjs",
             "import": "./dist/index.js"
+        },
+        "./browser": {
+            "require": "./dist/browser/index.cjs",
+            "import": "./dist/browser/index.js"
         }
     },
     "type": "module"

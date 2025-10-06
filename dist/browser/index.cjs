@@ -1,9 +1,5 @@
 'use strict';
 
-var fetch = require('node-fetch');
-var nodeLocalstorage = require('node-localstorage');
-var sessionstorage = require('sessionstorage');
-
 let _fetch = null;
 let mainStorage = null;
 let _sessionStorage = null;
@@ -556,19 +552,23 @@ var connect = { setup, ConnectMapper };
 
 const getMapper = (OBJY, options) => {
     let _fetch = fetch;
-    let _localStorage = new nodeLocalstorage.LocalStorage('./scratch');
-    let _sessionStorage = sessionstorage;
+    let _localStorage = localStorage;
+    let _sessionStorage = sessionStorage;
 
     connect.setup(_fetch, _localStorage, _sessionStorage);
 
-    connect.ConnectMapper(OBJY, options);
+    return connect.ConnectMapper(OBJY, options);
 };
 
-function index(OBJY, options) {
+function browser (OBJY, options) {
     let mapper = getMapper(OBJY, options);
+
+    if (typeof window !== 'undefined') {
+        window.CONNECT = mapper;
+    }
 
     return mapper;
 }
 
-module.exports = index;
+module.exports = browser;
 //# sourceMappingURL=index.cjs.map

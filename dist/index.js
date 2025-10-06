@@ -1,25 +1,18 @@
+import fetch from 'node-fetch';
+import { LocalStorage } from 'node-localstorage';
+import sessionstorage from 'sessionstorage';
+
 let _fetch = null;
-let _nodejs = typeof process !== 'undefined' && process.versions && process.versions.node;
 let mainStorage = null;
-let sessionStorage = null;
+let _sessionStorage = null;
 
-const init = async () => {
-    if (_nodejs) _fetch = await import('node-fetch');
-    else _fetch = fetch;
+const setup = (__fetch, __localStorage, __sessionStorage) => {
+    _fetch = __fetch;
 
-    if (typeof localStorage === 'undefined' || localStorage === null) {
-        let { LocalStorage } = await import('node-localstorage');
-        mainStorage = new LocalStorage('./scratch');
-    } else mainStorage = localStorage;
+    mainStorage = __localStorage;
 
-    if (typeof sessionStorage === 'undefined' || sessionStorage === null) {
-        sessionStorage = await import('sessionstorage');
-
-        if (sessionStorage.default) sessionStorage = sessionStorage.default;
-    }
+    _sessionStorage = __sessionStorage;
 };
-
-init();
 
 function parseJwt(token) {
     let base64Url = token.split('.')[1];
@@ -76,7 +69,7 @@ const ConnectMapper = function (OBJY, options) {
                 })
                 .then((json) => {
                     console.log('json', json);
-                    sessionStorage.setItem('accessToken', json.token.accessToken);
+                    _sessionStorage.setItem('accessToken', json.token.accessToken);
                     mainStorage.setItem('refreshToken', json.token.refreshToken);
                     this._genericApiCall(urlPart, method, body, success, error, app, count);
                 })
@@ -89,10 +82,10 @@ const ConnectMapper = function (OBJY, options) {
             else url = this.currentUrl + '/client/' + this.currentWorkspace + '/app/' + app + '/' + urlPart;
 
             // if(count) url += '/count'
-            let headers = { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') };
+            let headers = { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Baerer ' + _sessionStorage.getItem('accessToken') };
 
             try {
-                if (body instanceof FormData) headers = { Authorization: 'Baerer ' + sessionStorage.getItem('accessToken') };
+                if (body instanceof FormData) headers = { Authorization: 'Baerer ' + _sessionStorage.getItem('accessToken') };
             } catch (e) {}
 
             _fetch(url, {
@@ -155,7 +148,7 @@ const ConnectMapper = function (OBJY, options) {
                     })
                     .then((json) => {
                         mainStorage.setItem('clientId', this.currentWorkspace);
-                        sessionStorage.setItem('accessToken', json.token.accessToken);
+                        _sessionStorage.setItem('accessToken', json.token.accessToken);
                         mainStorage.setItem('refreshToken', json.token.refreshToken);
                         if (success) success(json);
                         else resolve(json);
@@ -183,7 +176,7 @@ const ConnectMapper = function (OBJY, options) {
                     })
                     .then((json) => {
                         mainStorage.setItem('clientId', this.currentWorkspace);
-                        sessionStorage.setItem('accessToken', json.token.accessToken);
+                        _sessionStorage.setItem('accessToken', json.token.accessToken);
                         mainStorage.setItem('refreshToken', json.token.refreshToken);
                         if (success) success(json);
                         else resolve(json);
@@ -197,7 +190,7 @@ const ConnectMapper = function (OBJY, options) {
 
         authenticated: function (callback) {
             return new Promise((resolve, reject) => {
-                _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/authenticated?token=' + sessionStorage.getItem('accessToken'), {
+                _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/authenticated?token=' + _sessionStorage.getItem('accessToken'), {
                     method: 'GET',
                     headers: { Accept: 'application/json' },
                 })
@@ -218,17 +211,17 @@ const ConnectMapper = function (OBJY, options) {
                 _fetch(this.currentUrl + '/client/' + this.currentWorkspace + '/token/reject', {
                     method: 'POST',
                     body: JSON.stringify({
-                        accessToken: sessionStorage.getItem('accessToken'),
+                        accessToken: _sessionStorage.getItem('accessToken'),
                     }),
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
-                        Authorization: 'Baerer ' + sessionStorage.getItem('accessToken'),
+                        Authorization: 'Baerer ' + _sessionStorage.getItem('accessToken'),
                     },
                 })
                     .then((res) => res.json())
                     .then((json) => {
-                        sessionStorage.removeItem('accessToken');
+                        _sessionStorage.removeItem('accessToken');
                         mainStorage.removeItem('refreshToken');
                         if (success) success(json);
                         else resolve(json);
@@ -248,7 +241,7 @@ const ConnectMapper = function (OBJY, options) {
             url += '/stream';
 
             return new Promise((resolve, reject) => {
-                let token = parseJwt(sessionStorage.getItem('accessToken'));
+                let token = parseJwt(_sessionStorage.getItem('accessToken'));
                 let utcSeconds = token.exp;
                 let d = new Date(0);
                 let now = new Date();
@@ -258,7 +251,7 @@ const ConnectMapper = function (OBJY, options) {
                     // relogin
                     relogin(
                         (_success) => {
-                            let _url = url + '?token=' + sessionStorage.getItem('accessToken');
+                            let _url = url + '?token=' + _sessionStorage.getItem('accessToken');
 
                             if (success) success(_url);
                             else resolve(_url);
@@ -269,7 +262,7 @@ const ConnectMapper = function (OBJY, options) {
                         }
                     );
                 } else {
-                    let _url = url + '?token=' + sessionStorage.getItem('accessToken');
+                    let _url = url + '?token=' + _sessionStorage.getItem('accessToken');
 
                     if (success) success(_url);
                     else resolve(_url);
@@ -345,7 +338,7 @@ const ConnectMapper = function (OBJY, options) {
 
         changePassword: function (data, success, error) {
             return new Promise((resolve, reject) => {
-                if (sessionStorage.getItem('accessToken')) {
+                if (_sessionStorage.getItem('accessToken')) {
                     _fetch(this.currentUrl + '/client/' + this.currentWorkspace + `/user/${data.userId}/password`, {
                         method: 'PATCH',
                         body: JSON.stringify({
@@ -355,7 +348,7 @@ const ConnectMapper = function (OBJY, options) {
                         headers: {
                             'Content-Type': 'application/json',
                             Accept: 'application/json',
-                            Authorization: 'Baerer ' + sessionStorage.getItem('accessToken'),
+                            Authorization: 'Baerer ' + _sessionStorage.getItem('accessToken'),
                         },
                     })
                         .then((res) => res.json())
@@ -477,7 +470,7 @@ const ConnectMapper = function (OBJY, options) {
         },
 
         turnOnSessionOnly: function () {
-            mainStorage = sessionStorage;
+            mainStorage = _sessionStorage;
         },
 
         getTwoFaMethod: function (method, success, error) {
@@ -487,7 +480,7 @@ const ConnectMapper = function (OBJY, options) {
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
-                        Authorization: 'Baerer ' + sessionStorage.getItem('accessToken'),
+                        Authorization: 'Baerer ' + _sessionStorage.getItem('accessToken'),
                     },
                 })
                     .then(async (res) => {
@@ -526,7 +519,7 @@ const ConnectMapper = function (OBJY, options) {
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
-                        Authorization: 'Baerer ' + sessionStorage.getItem('accessToken'),
+                        Authorization: 'Baerer ' + _sessionStorage.getItem('accessToken'),
                     },
                 })
                     .then(async (res) => {
@@ -557,9 +550,23 @@ const ConnectMapper = function (OBJY, options) {
     });
 };
 
-if (typeof window !== 'undefined') {
-    window.CONNECT = ConnectMapper;
+var connect = { setup, ConnectMapper };
+
+const getMapper = (OBJY, options) => {
+    let _fetch = fetch;
+    let _localStorage = new LocalStorage('./scratch');
+    let _sessionStorage = sessionstorage;
+
+    connect.setup(_fetch, _localStorage, _sessionStorage);
+
+    connect.ConnectMapper(OBJY, options);
+};
+
+function index(OBJY, options) {
+    let mapper = getMapper(OBJY, options);
+
+    return mapper;
 }
 
-export { ConnectMapper as default };
+export { index as default };
 //# sourceMappingURL=index.js.map
