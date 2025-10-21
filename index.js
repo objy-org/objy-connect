@@ -10,7 +10,7 @@ const getMapper = (OBJY, options) => {
 
     connect.setup(_fetch, _localStorage, _sessionStorage);
 
-    connect.ConnectMapper(OBJY, options);
+    return connect.ConnectMapper(OBJY, options);
 };
 
 export default function(OBJY, options) {
