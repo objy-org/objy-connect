@@ -434,7 +434,7 @@ const ConnectMapper = function (OBJY, options) {
 
         update: function (spooElement, success, error, app, client) {
             let alterData = [];
-            OBJY.alterSequence.forEach((a) => {
+            OBJY.globalCtx.alterSequence.forEach((a) => {
                 if (a[Object.keys(a)[0]].length > 1) a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]]);
                 else a[Object.keys(a)[0]] = Object.values(a[Object.keys(a)[0]])[0];
                 alterData.push(a);
@@ -561,7 +561,7 @@ const getMapper = (OBJY, options) => {
 
     connect.setup(_fetch, _localStorage, _sessionStorage);
 
-    connect.ConnectMapper(OBJY, options);
+    return connect.ConnectMapper(OBJY, options);
 };
 
 function index(OBJY, options) {
